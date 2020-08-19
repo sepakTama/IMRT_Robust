@@ -56,9 +56,8 @@ end
 
 % add noise to Influence Matrix
 for i=1:strNum
-    [Input{i}.mat, uncertainBound] = mat2uncertain(Input{i}.mat, 'Normal');
+    [Input{i}, uncertainBound] = mat2uncertain(Input{i}, 'Normal');
 end
-
 % show information of PTV/OAR in details
 for str = 1:strNum 
    fprintf('===Structure{%d}===', str);
@@ -71,20 +70,26 @@ Aeq = [];
 voxelNum = 0;
 exvariable = 0;
 
+
 for str = 1:strNum
-    Aeq = [Aeq; Input{str}.mat];
-    voxelNum = voxelNum + Input{str}.size;
+    Aeq = [Aeq; Input{str}.matMinus];
+    Aeq = [Aeq; Input{str}.matPlus];
+    voxelNum = voxelNum + 2 * Input{str}.size;
     % exvariable : 
-    %(\zeta - z)^+...voxelNum + (\theta - z)^+...voxelNum + \zeta...1
-    % there are upper and lower constraints, so multiple 2
-    exvariable = exvariable + 2 * (Input{str}.size+1) * (max(size(Input{str}.lp))+max(size(Input{str}.up))); 
+    % (\zeta - z)^+...voxelNum
+    % (\theta - z)^+...voxelNum
+    % \zeta...1
+    % there are upper and lower constraints
+    % 修正してみた
+    exvariable = exvariable + (2*Input{str}.size + 1) * (max(size(Input{str}.lp))+max(size(Input{str}.up))); 
 end
 
 % this is minimize variable. -> おそらくいらない
 % exvariable = exvariable + 1;
 
-% Dx = z <=> [D -I][x , z]^T = 0 <=> Aeq * (variable) = beq
-Aeq = [Aeq -speye(voxelNum) ]; 
+% ここ
+% [D+;D-]x = z <=> [D+;D-, -I][x , z]^T = 0 <=> Aeq * (variable) = beq
+Aeq = [Aeq -speye(voxelNum)]; 
 beq = zeros(voxelNum, 1);
 
 % to use constant in inequations
@@ -146,6 +151,7 @@ for z=1:iterationNum
     lambdaMinusIndex = 1;
     lambdaPlusIndex = 1;
     
+    % z の部分を修正必要? -> 修正しなくても満たしそう
     % original ub and lb value.
     uborigin = [ones(beamletNum, 1)*INF; ones(voxelNum, 1) * 100];  
     lborigin = zeros(beamletNum + voxelNum, 1);  
@@ -171,39 +177,47 @@ for z=1:iterationNum
     x0 = [finalx(1:(beamletNum + voxelNum+1)) ;zeros(exvariable, 1)  ];
     prevZetaIndex = 1;
     
-    % strLIndexはデータのバグで\alpha=0,1が二つ以上あるときに使用
-    strLIndex = 0;
-    strUIndex = 0;
+    % ここから
     for str=1:strNum
-        Input{str}.prevDose = Input{str}.mat * finalx(1:beamletNum);
+        Input{str}.prevDoseMinus = Input{str}.matMinus * finalx(1:beamletNum);
+        Input{str}.prevDosePlus = Input{str}.matPlus * finalx(1:beamletNum);
+        % DVC with no ratio alpha
         % l - Pt <= z
         for ind = 1:max(size(Input{str}.lp))
             if Input{str}.lp(ind) > 1-(1e-3) 
                ld = Input{str}.ld(ind);
                for voxel=1:Input{str}.size
-                   lborigin(fixIndex+strLIndex+voxel) = max(lborigin(fixIndex+strLIndex+voxel), ld); % 効率悪い気がする。一個ずつmaxとってるやん。
-                  
-                   spi(curPos:curPos+1) = [curConst curConst]; 
-                   spj(curPos:curPos+1) = [paramIndex fixIndex + voxel];
-                   sps(curPos:curPos+1) = [-1 -1]; % Pを考慮するならばここを変更
+                   % lower bound on variable
+                   % each bound is for z- z+, respectively
+                   lborigin(fixIndex+voxel) = max(lborigin(fixIndex+voxel), ld); % 効率悪い気がする。一個ずつmaxとってるやん。
+                   lborigin(fixIndex+Input{str}.size+voxel) = max(lborigin(fixIndex+Input{str}.size+voxel), ld);
                    
+                   % -(z-) - Pt <= -L
+                   spi(curPos:curPos+1) = [curConst curConst]; 
+                   spj(curPos:curPos+1) = [fixIndex+voxel paramIndex];
+                   sps(curPos:curPos+1) = [-1 -1]; % Pを考慮するならばここを変更
                    bcon(curConst) = -ld;
+                   
+                   % upload the index of sparse matrix
                    curConst = curConst + 1;
                    curPos = curPos + 2;
                end
-               strLIndex = strLIndex + Input{str}.size; % strLIndexの更新いる？2つ以上ある場合、indで更新するため。 strLIndex = strLIndex + 1でおっけlborginのindexはいずれにしても先頭.
                
                % ここに新しくpenalty項を入れる -> wIndexの数を考慮する必要ある？
+               % penalty terms ("nu" is the artificial variable)
                strsize = Input{str}.size;
                for voxel = 1:Input{str}.size
+                   % -(z-) - nu <= - L
                    spi(curPos:curPos+1) = [curConst, curConst];
                    spj(curPos:curPos+1) = [fixIndex+voxel, wIndex];
                    sps(curPos:curPos+1) = [-1, -1];
                    bcon(curConst) = -ld;
-                   
+                   % initial point
                    x0(wIndex) = 0;
+                   % coefficient of objective function
                    c(wIndex) = lambdaMinus(lambdaMinusIndex) / strsize;
                    
+                   % upload the index
                    wIndex = wIndex + 1;
                    curConst = curConst + 1;
                    curPos = curPos + 2;
@@ -212,13 +226,15 @@ for z=1:iterationNum
                continue; 
             end
             
+            % DVC with ratio alpha
             % count the number of the voxel in set R
             useCnt = 0;
-            unuseIndex = zeros(Input{str}.size, 1); % 上を二つ以上ある場合に変更しているならここも必要かな。maxとか
+            unuseIndex = zeros(Input{str}.size, 1);
             for voxel = 1:Input{str}.size
                 checker = Input{str}.lt(ind) - EPS;
-                % if z<L-Pt, then this coresponding index turns from 0 to 1
-                if Input{str}.prevDose(voxel) < checker
+                % if z- < L - Pt, then this coresponding index turns from 0 to 1
+                % z- で正しいのか？要チェック
+                if Input{str}.prevDoseMinus(voxel) < checker
                     unuseIndex(voxel) = 1;
                 else
                     useCnt = useCnt+1;
@@ -231,21 +247,26 @@ for z=1:iterationNum
             etaIndexes = [etaIndexes; etaIndex];
             initIndex = wIndex-1;
             for voxel = 1:Input{str}.size
+                % check voxel is included in the set R
                 if unuseIndex(voxel)==1 
                     continue;
                 end
-                % zeta(etaIndex) - z(fixIndex+voxel) - w(wIndex) <= 0(bcon)
+                %  - z(fixIndex+voxel) - w(wIndex) + zeta(etaIndex) <= 0(bcon)
                 spi(curPos:curPos+2) = [curConst curConst curConst];
                 spj(curPos:curPos+2) = [fixIndex+voxel wIndex etaIndex];
                 sps(curPos:curPos+2) = [-1 -1 1];
                 bcon(curConst) = 0;
                 
+                % initial point
                 x0(wIndex) = max(0, prevZeta(prevZetaIndex) - finalx(fixIndex+voxel));
                 
+                % upload index
                 wIndex = wIndex + 1;
                 curConst = curConst + 1;
                 curPos = curPos + 3;
             end
+            % from here
+            % set the DVC with ratio alpha,\
             unuseCnt = Input{str}.size - useCnt;
             % remainCnt = (1 - alpha)*v_s - |R|
             remainCnt = (1-Input{str}.lp(ind)) * Input{str}.size - unuseCnt;
@@ -254,38 +275,43 @@ for z=1:iterationNum
             end
             coef = 1/remainCnt;
             
-            cntDiff = 0; % cntDiffはunusedIndexの総和ー＞修正可能
+            cntDiff = 0; 
             for voxel=1:Input{str}.size
+                % if unuseIndex is true then skip this iteration
+                % else, then set the sparse matrix about (zeta - z)^+
+                % and then use cntDiff in order that exvariables are used successfully
                 if unuseIndex(voxel)==1
                     cntDiff = cntDiff + 1;
                     continue;
                 end
                 % coef * w /// w = (zeta - z)^+
-                % from this, spi does not change, to express "zeta - coef*w >= L - Pt"
+                % express "zeta - coef*w >= L - Pt"
                 spi(curPos) = curConst;
                 spj(curPos) = initIndex + voxel - cntDiff;
                 sps(curPos) = coef;
                 curPos = curPos + 1;
             end
+            % zeta
             spi(curPos) = curConst;
             spj(curPos) = etaIndex;
             sps(curPos) = -1;
-            
+            % initial point
             x0(wIndex) = Input{str}.lt(ind);
-            
+            % upload index
             curPos = curPos + 1;
             wIndex = wIndex + 1;
-            
+            % t
             spi(curPos) = curConst;
             spj(curPos) = paramIndex;
             sps(curPos) = -Input{str}.lparam(ind);
-            
+            % constant
             ld = Input{str}.ld(ind) + boundAdjust;
             bcon(curConst) = -ld;
             CVaRIndex = [CVaRIndex; unuseCnt];
-            
+            % upload index
             curPos = curPos + 1;
             curConst = curConst + 1;
+            % until here, about DVC with ratio alpha
             
             % coefの情報はあまり必要ない？|R|だけでいいのでは？
             coefValues = [coefValues; coef];
@@ -304,7 +330,7 @@ for z=1:iterationNum
                 x0(wIndex) = 0; % 初期点を入れるかは考え中
                 % set penalty to objective function c(wIndex)
                 c(wIndex) = lambdaMinus(lambdaMinusIndex) / strsize;
-                
+                % upload index
                 wIndex = wIndex + 1;
                 curConst = curConst + 1;
                 curPos = curPos + 2;
@@ -313,38 +339,47 @@ for z=1:iterationNum
             if 0
                 info = [unuseCnt remainCnt coef bcon(curConst-1)]
             end
-            
+            % upload index of zeta and lambda
             prevZetaIndex = prevZetaIndex + 1;
             lambdaMinusIndex = lambdaMinusIndex + 1;
         end
         
-        % from this, Upper DVC constraints
+        % from here, Upper DVC constraints
+        % be careful that variable is [x, z-, z+, t, exvariable]
         for ind = 1:max(size(Input{str}.up))
+            % DVC with no ratio alpha
+            % z+ <= U + Pt
+            strVoxelNum = Input{str}.size; % for using z+
             if Input{str}.up(ind) < 1e-3
                 ud = Input{str}.ud(ind);
                 for voxel=1:Input{str}.size
-                   uborigin(fixIndex+strUIndex+voxel) = min(uborigin(fixIndex+strUIndex+voxel), ud);
+                   uborigin(fixIndex+strVoxelNum+voxel) = min(uborigin(fixIndex+strVoxelNum+voxel), ud);
                    
-                   spi(curPos:curPos+1) = [curConst curConst ];
-                   spj(curPos:curPos+1) = [paramIndex fixIndex + voxel];
-                   sps(curPos:curPos+1) = [-1 1];
-                   
+                   spi(curPos:curPos+1) = [curConst curConst];
+                   spj(curPos:curPos+1) = [fixIndex+strvoxelNum+voxel paramIndex];
+                   sps(curPos:curPos+1) = [1 -1];
                    bcon(curConst) = ud;
+                   % upload index
                    curConst = curConst + 1;
                    curPos = curPos + 2; 
                 end
-                strUIndex = strUIndex + Input{str}.size;
                 % ここにpenalty項をいれる
+                % penalty terms ("nu" is the artificial variable)
+                % z+ - nu <= U
                 strsize = Input{str}.size;
                 for voxel = 1:Input{str}.size
                     spi(curPos:curPos+1) = [curConst, curConst];
-                    spj(curPos:curPos+1) = [fixIndex+voxel, wIndex];
+                    spj(curPos:curPos+1) = [fixIndex+strVoxelNum+voxel, wIndex];
                     sps(curPos:curPos+1) = [1, -1];
                     bcon(curConst) = ud;
                     
-                    x0(wIndex) = 0; % 初期点
+                    % initial point
+                    x0(wIndex) = 0;
+                    
+                    % coefficient of the objective function
                     c(wIndex) = lambdaPlus(lambdaPlusIndex) / strsize;
                     
+                    % upload index
                     wIndex = wIndex + 1;
                     curConst = curConst + 1;
                     curPos = curPos + 2;
@@ -353,18 +388,20 @@ for z=1:iterationNum
                 continue; 
             end
             
+            % DVC with ratio alpha
             useCnt = 0;
             unuseIndex = zeros(Input{str}.size, 1);
+            % check the voxel is included in the set R
             for voxel = 1:Input{str}.size
-                
                checker = Input{str}.ut(ind) + EPS;
-               if Input{str}.prevDose(voxel) > checker
+               if Input{str}.prevDosePlus(voxel) > checker
                   unuseIndex(voxel) = 1;
                else
                    useCnt = useCnt + 1;
                end
             end
             
+            % this eta is zeta in paper
             etaIndex = wIndex + useCnt;
             etaIndexes = [etaIndexes; etaIndex];
             initIndex = wIndex-1;
@@ -372,49 +409,61 @@ for z=1:iterationNum
                 if unuseIndex(voxel) == 1
                     continue; 
                 end
+                % (z+ - zeta)^+ -> z+ - nu - zeta <= 0
                 spi(curPos:curPos+2) = [curConst curConst curConst];
-                spj(curPos:curPos+2) = [fixIndex+voxel wIndex etaIndex];
+                spj(curPos:curPos+2) = [fixIndex+strVoxelNum+voxel wIndex etaIndex];
                 sps(curPos:curPos+2) = [1 -1 -1];
                 bcon(curConst) = 0;
                 
-                x0(wIndex) = max(0, finalx(fixIndex+voxel) - prevZeta(prevZetaIndex));
+                % initial point
+                x0(wIndex) = max(0, finalx(fixIndex+strVoxelNum+voxel) - prevZeta(prevZetaIndex));
                 
+                % upload index
                 wIndex = wIndex + 1;
                 curConst = curConst + 1;
                 curPos = curPos + 3;
             end
+            % remainCnt is (alpha * v - |R|)
             unuseCnt = Input{str}.size - useCnt;
             remainCnt = Input{str}.up(ind) * Input{str}.size - unuseCnt;
-            if remainCnt <=0 
+            if remainCnt <= 0 
                 exitflag = 0;
             end
             coef = 1/remainCnt;
-            
+            % if unuseIndex is true then skip this iteration
+            % else, then set the sparse matrix about (zeta - z)^+
+            % and then use cntDiff in order that exvariables are used successfully
             cntDiff = 0;
             for voxel = 1:Input{str}.size
                 if unuseIndex(voxel) == 1
                    cntDiff = cntDiff + 1;
                    continue; 
                 end
-                % zeta + coef*w <= U + Pt
+                % zeta + coef * w <= U + Pt
+                % w
                 spi(curPos) = curConst;
                 spj(curPos) = initIndex + voxel - cntDiff;
                 sps(curPos) = coef;
                 curPos = curPos + 1;
             end
+            % zeta
             spi(curPos) = curConst;
             spj(curPos) = etaIndex;
             sps(curPos) = 1;
-
+            
+            % initial point
             x0(wIndex) = Input{str}.ut(ind);
             
+            % upload index
             curPos = curPos + 1;
             wIndex = wIndex + 1;
             
+            % t
             spi(curPos) = curConst;
             spj(curPos) = paramIndex;
             sps(curPos) = -Input{str}.uparam(ind);
             
+            % constant
             ud = Input{str}.ud(ind) - boundAdjust;
             bcon(curConst) = ud;
             
@@ -426,20 +475,25 @@ for z=1:iterationNum
             % coefの情報はいらない？
             coefValues = [coefValues; coef];
             
-            % from this, penalty term
+            % from here, penalty term
             strsize = useCnt;
             for voxel = 1:Input{str}.size
                 if unuseIndex(voxel) == 1
                     continue;
                 end
+                % z+ - nu <= U
                 spi(curPos:curPos+1) = [curConst, curConst];
-                spj(curPos:curPos+1) = [fixIndex+voxel, wIndex];
+                spj(curPos:curPos+1) = [fixIndex+strVoxelNum+voxel, wIndex];
                 sps(curPos:curPos+1) = [1, -1];
                 bcon(curConst) = ud;
                 
+                % initial point
                 x0(wIndex) = 0; % 変更すると速くなる？
+                
+                % coefficient of the objective function
                 c(wIndex) = lambdaPlus(lambdaPlusIndex) / strsize;
                 
+                % upload index
                 wIndex = wIndex + 1;
                 curConst = curConst + 1;
                 curPos = curPos + 2;
@@ -450,9 +504,9 @@ for z=1:iterationNum
             prevZetaIndex = prevZetaIndex + 1;
             lambdaPlusIndex = lambdaPlusIndex + 1;
         end
-        fixIndex = fixIndex + Input{str}.size;
+        fixIndex = fixIndex + 2*Input{str}.size; % z+ z-
     end
-    % from this, construct the form to use CPLEX
+    % from here, construct the form to use CPLEX
     range = (1:(curPos-1));
     Acon = sparse(spi(range), spj(range), sps(range));
     bcon = bcon(1:(curConst-1));
@@ -542,9 +596,20 @@ if strcmp(option, 'all')
 elseif strcmp(option, 'onlyX')
     opt = finalx(1:beamletNum);
 elseif strcmp(option, 'onlyZ')
-    opt = finalx((beamletNum+1):(beamletNum+voxelNum)); 
+    %opt = finalx((beamletNum+1):(beamletNum+voxelNum)); 
+    for str = 1:strNum
+        A0 = [];
+        A0 = [A0; Input{str}.mat0];
+    end
+    opt = A0 * finalx(1:beamletNum);
 elseif strcmp(option, 'xzt')
-    opt = finalx(1:(beamletNum + voxelNum + 1));
+    % opt = finalx(1:(beamletNum + voxelNum + 1));
+    A0 = [];
+    for str = 1:strNum
+        A0 = [A0; Input{str}.mat0];
+    end
+    opt_z = A0 * finalx(1:beamletNum);
+    opt = [finalx(1:beamletNum); opt_z; finalx(beamlet+2*voxelNum+1)];
 end
 
 appendix = [];
