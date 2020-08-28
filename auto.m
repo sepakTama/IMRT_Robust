@@ -50,12 +50,14 @@ end
 data_path = "./log/data.csv";
 % data_csv = ["alpha" "iterationNum" "ratio" "t_history" "time_history"];
 data_csv = [];
-for ratio=0:0.01:0.2
+for ratio=0:0.01:0.4
     for UncertainBound=0.05:0.05:0.2
-        [Input, x, opt,  t_history, time_history, total_time] = UncertainIterate( ...
-                        Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus);
-                        
-        data_csv = [data_csv; [alpha iterationNum ratio t_history.' time_histry.' total_time]];
+        for loop=1:3
+            [Input, x, opt,  t_history, time_history, total_time] = UncertainIterate( ...
+                            Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus, ratio, UncertainBound);
+
+            data_csv = [data_csv; [alpha iterationNum ratio t_history.' time_histry.' total_time]];
+        end
     end
 end
 csvwrite(data_path, data_csv);

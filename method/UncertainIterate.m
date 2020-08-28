@@ -1,4 +1,4 @@
-function [Input, x, opt,  t_history, time_history, total_time] = UncertainIterate(Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus)
+function [Input, x, opt,  t_history, time_history, total_time] = UncertainIterate(Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus, ratio, uncertainBound)
 % Input : CShape. The infomation about DVC, InfluenceMatrix and so on.
 % alpha : if alpha<1, consider the voxel at the ratio alpha.
 %         if alpha>1, consider the alpha voxel.
@@ -55,9 +55,8 @@ elseif alpha == 1 && isempty(init) == 0
 end
 
 % add noise to Influence Matrix
-for i=1:strNum
-    [Input{i}, uncertainBound] = mat2uncertain(Input{i}, 'Normal');
-end
+[Input, uncertainBound] = mat2uncertain(Input, 'Normal', ratio, uncertainBound);
+
 % show information of PTV/OAR in details
 for str = 1:strNum 
    fprintf('===Structure{%d}===', str);
