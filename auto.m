@@ -4,8 +4,8 @@
 alpha = 1;
 iterationNum = 5;
 option = 'onlyZ';
-lambdaMinus = [0;0;0;0];
-lambdaPlus = [0;0;0;0];
+lambdaMinus = [0;0;0;0;0;0;0;0];
+lambdaPlus = [0;0;0;0;0;0;0;0];
 
 
 global planC
@@ -47,16 +47,17 @@ switch DATA
         error('No Data');
 end
 
-data_path = "./log/data.csv";
+data_path = "./log/data_multi.csv";
 % data_csv = ["alpha" "iterationNum" "ratio" "t_history" "time_history"];
 data_csv = [];
-for ratio=0:0.01:0.4
-    for UncertainBound=0.05:0.05:0.2
+for ratio=0.01:0.01:0.2
+    for uncertainBound=0.01:0.01:0.2
         for loop=1:3
+            fprintf('ratio == %.2f , uncertainBound == %.2f , loop == %d \n', ratio, uncertainBound, loop);
             [Input, x, opt,  t_history, time_history, total_time] = UncertainIterate( ...
-                            Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus, ratio, UncertainBound);
+                            Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus, ratio, uncertainBound);
 
-            data_csv = [data_csv; [alpha iterationNum ratio UncertainBound t_history.' time_history.' total_time]];
+            data_csv = [data_csv; [alpha iterationNum ratio uncertainBound t_history.' time_history.' total_time]];
         end
     end
 end

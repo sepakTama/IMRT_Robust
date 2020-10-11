@@ -24,7 +24,7 @@ time_history = [];
 EPS = 1e-2;
 INF = 120;
 
-% —p‚¢‚Ä‚¢‚È‚¢
+% ï¿½pï¿½ï¿½ï¿½Ä‚ï¿½ï¿½È‚ï¿½
 boundAdjust = 0;
 
 % beamletNum: number of beamlets, strNum: number of PTV and OAR
@@ -35,7 +35,7 @@ global init;
 
 % decide how many we use depende on alpha
 % set Influence Matrix with chooseMatrix
-% Input{*}.val ‚Í—p‚¢‚Ä‚¢‚È‚¢B
+% Input{*}.val ï¿½Í—pï¿½ï¿½ï¿½Ä‚ï¿½ï¿½È‚ï¿½ï¿½B
 if alpha<1
     for i=1:strNum
      [Input{i}.mat, Input{i}.val] = chooseMatrix(Input{i}.mat, Input{i}.val, alpha);
@@ -79,14 +79,14 @@ for str = 1:strNum
     % (\theta - z)^+...voxelNum
     % \zeta...1
     % there are upper and lower constraints
-    % C³‚µ‚Ä‚İ‚½
+    % ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Ä‚İ‚ï¿½
     exvariable = exvariable + (2*Input{str}.size + 1) * (max(size(Input{str}.lp))+max(size(Input{str}.up))); 
 end
 
-% this is minimize variable. -> ‚¨‚»‚ç‚­‚¢‚ç‚È‚¢
+% this is minimize variable. -> ï¿½ï¿½ï¿½ï¿½ï¿½ç‚­ï¿½ï¿½ï¿½ï¿½È‚ï¿½
 % exvariable = exvariable + 1;
 
-% ‚±‚±
+% ï¿½ï¿½ï¿½ï¿½
 % [D+;D-]x = z <=> [D+;D-, -I][x , z]^T = 0 <=> Aeq * (variable) = beq
 Aeq = [Aeq -speye(voxelNum)]; 
 beq = zeros(voxelNum, 1);
@@ -116,7 +116,7 @@ for str = 1:strNum
     cntSetVariable = cntSetVariable + 2 * strVoxelNum * DVCNum;
     
     % \zeta, ()^+, t -> use in C-VaR constraint
-    % ‚¨‚»‚ç‚­strVoxelNum‚Í‚¢‚ç‚È‚¢
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ç‚­strVoxelNumï¿½Í‚ï¿½ï¿½ï¿½È‚ï¿½
     cntSetVariable = cntSetVariable + (1 + 1 + strVoxelNum) * DVCNum ;
 end
 
@@ -133,10 +133,10 @@ for str = 1:strNum
 end
 
 % set the number of unusing voxel
-% W‡R‚ÉŠÜ‚Ü‚ê‚évoxel‚ÌŒÂ”
+% ï¿½Wï¿½ï¿½Rï¿½ÉŠÜ‚Ü‚ï¿½ï¿½voxelï¿½ÌŒÂï¿½
 CVaRIndex = [];
 
-% o—Í‚Ìopt‚ÌŒ´Œ^
+% ï¿½oï¿½Í‚ï¿½optï¿½ÌŒï¿½ï¿½^
 finalx = [zeros(beamletNum + voxelNum, 1) ; 1000];
 
 % main routine
@@ -150,7 +150,7 @@ for z=1:iterationNum
     lambdaMinusIndex = 1;
     lambdaPlusIndex = 1;
     
-    % z ‚Ì•”•ª‚ğC³•K—v? -> C³‚µ‚È‚­‚Ä‚à–‚½‚µ‚»‚¤
+    % z ï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Kï¿½v? -> ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     % original ub and lb value.
     uborigin = [ones(beamletNum, 1)*INF; ones(voxelNum, 1) * 100];  
     lborigin = zeros(beamletNum + voxelNum, 1);  
@@ -172,11 +172,11 @@ for z=1:iterationNum
     
     coefValues = []; % set the value of coefficient in DVC with CVaR
     
-    % x0 is starting point (->‰Šú“_‚Å‚»‚ñ‚È‚ÉŠÔ‚ª•Ï‚í‚ç‚È‚¢)
+    % x0 is starting point (->ï¿½ï¿½ï¿½ï¿½_ï¿½Å‚ï¿½ï¿½ï¿½È‚Éï¿½ï¿½Ô‚ï¿½ï¿½Ï‚ï¿½ï¿½È‚ï¿½)
     x0 = [finalx(1:(beamletNum + voxelNum+1)) ;zeros(exvariable, 1)  ];
     prevZetaIndex = 1;
     
-    % ‚±‚±‚©‚ç
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for str=1:strNum
         Input{str}.prevDoseMinus = Input{str}.matMinus * finalx(1:beamletNum);
         Input{str}.prevDosePlus = Input{str}.matPlus * finalx(1:beamletNum);
@@ -188,13 +188,13 @@ for z=1:iterationNum
                for voxel=1:Input{str}.size
                    % lower bound on variable
                    % each bound is for z- z+, respectively
-                   lborigin(fixIndex+voxel) = max(lborigin(fixIndex+voxel), ld); % Œø—¦ˆ«‚¢‹C‚ª‚·‚éBˆêŒÂ‚¸‚Âmax‚Æ‚Á‚Ä‚é‚â‚ñB
+                   lborigin(fixIndex+voxel) = max(lborigin(fixIndex+voxel), ld); % ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½ï¿½Â‚ï¿½ï¿½ï¿½maxï¿½Æ‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½B
                    lborigin(fixIndex+Input{str}.size+voxel) = max(lborigin(fixIndex+Input{str}.size+voxel), ld);
                    
                    % -(z-) - Pt <= -L
                    spi(curPos:curPos+1) = [curConst curConst]; 
                    spj(curPos:curPos+1) = [fixIndex+voxel paramIndex];
-                   sps(curPos:curPos+1) = [-1 -1]; % P‚ğl—¶‚·‚é‚È‚ç‚Î‚±‚±‚ğ•ÏX
+                   sps(curPos:curPos+1) = [-1 -1]; % Pï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½Î‚ï¿½ï¿½ï¿½ï¿½ï¿½ÏX
                    bcon(curConst) = -ld;
                    
                    % upload the index of sparse matrix
@@ -202,7 +202,7 @@ for z=1:iterationNum
                    curPos = curPos + 2;
                end
                
-               % ‚±‚±‚ÉV‚µ‚­penalty€‚ğ“ü‚ê‚é -> wIndex‚Ì”‚ğl—¶‚·‚é•K—v‚ ‚éH
+               % ï¿½ï¿½ï¿½ï¿½ï¿½ÉVï¿½ï¿½ï¿½ï¿½penaltyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -> wIndexï¿½Ìï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Kï¿½vï¿½ï¿½ï¿½ï¿½H
                % penalty terms ("nu" is the artificial variable)
                strsize = Input{str}.size;
                for voxel = 1:Input{str}.size
@@ -232,7 +232,7 @@ for z=1:iterationNum
             for voxel = 1:Input{str}.size
                 checker = Input{str}.lt(ind) - EPS;
                 % if z- < L - Pt, then this coresponding index turns from 0 to 1
-                % z- ‚Å³‚µ‚¢‚Ì‚©H—vƒ`ƒFƒbƒN
+                % z- ï¿½Åï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½Hï¿½vï¿½`ï¿½Fï¿½bï¿½N
                 if Input{str}.prevDoseMinus(voxel) < checker
                     unuseIndex(voxel) = 1;
                 else
@@ -241,7 +241,7 @@ for z=1:iterationNum
             end
             
             % eta is used when zeta is needed in inequarity
-            % ‚±‚±‚Ìeta‚Í˜_•¶‚Ìzeta
+            % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½etaï¿½Í˜_ï¿½ï¿½ï¿½ï¿½zeta
             etaIndex = wIndex + useCnt ;
             etaIndexes = [etaIndexes; etaIndex];
             initIndex = wIndex-1;
@@ -312,7 +312,7 @@ for z=1:iterationNum
             curConst = curConst + 1;
             % until here, about DVC with ratio alpha
             
-            % coef‚Ìî•ñ‚Í‚ ‚Ü‚è•K—v‚È‚¢H|R|‚¾‚¯‚Å‚¢‚¢‚Ì‚Å‚ÍH
+            % coefï¿½Ìï¿½ï¿½Í‚ï¿½ï¿½Ü‚ï¿½Kï¿½vï¿½È‚ï¿½ï¿½H|R|ï¿½ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½Ì‚Å‚ÍH
             coefValues = [coefValues; coef];
             
             % penalty term (theta - z)^+ /// - z - w <= - theta(ld)
@@ -326,7 +326,7 @@ for z=1:iterationNum
                 sps(curPos:curPos+1) = [-1, -1];
                 bcon(curConst) = -ld;
                 
-                x0(wIndex) = 0; % ‰Šú“_‚ğ“ü‚ê‚é‚©‚Íl‚¦’†
+                x0(wIndex) = 0; % ï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½ï¿½é‚©ï¿½Ílï¿½ï¿½ï¿½ï¿½
                 % set penalty to objective function c(wIndex)
                 c(wIndex) = lambdaMinus(lambdaMinusIndex) / strsize;
                 % upload index
@@ -362,7 +362,7 @@ for z=1:iterationNum
                    curConst = curConst + 1;
                    curPos = curPos + 2; 
                 end
-                % ‚±‚±‚Épenalty€‚ğ‚¢‚ê‚é
+                % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½penaltyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 % penalty terms ("nu" is the artificial variable)
                 % z+ - nu <= U
                 strsize = Input{str}.size;
@@ -471,7 +471,7 @@ for z=1:iterationNum
             curPos = curPos + 1;
             curConst = curConst + 1;
             
-            % coef‚Ìî•ñ‚Í‚¢‚ç‚È‚¢H
+            % coefï¿½Ìï¿½ï¿½Í‚ï¿½ï¿½ï¿½È‚ï¿½ï¿½H
             coefValues = [coefValues; coef];
             
             % from here, penalty term
@@ -487,7 +487,7 @@ for z=1:iterationNum
                 bcon(curConst) = ud;
                 
                 % initial point
-                x0(wIndex) = 0; % •ÏX‚·‚é‚Æ‘¬‚­‚È‚éH
+                x0(wIndex) = 0; % ï¿½ÏXï¿½ï¿½ï¿½ï¿½Æ‘ï¿½ï¿½ï¿½ï¿½È‚ï¿½H
                 
                 % coefficient of the objective function
                 c(wIndex) = lambdaPlus(lambdaPlusIndex) / strsize;
@@ -628,12 +628,12 @@ for str = 1:strNum
     end
 end
 
-%CVaR‚Ì•\¦
+%CVaRï¿½Ì•\ï¿½ï¿½
 fprintf('== CVaRIndex == ');
 fprintf('%.2f ', CVaRIndex);
 fprintf('\n');
 
-% •ÏX“_ lambda‚Ì•\¦
+% ï¿½ÏXï¿½_ lambdaï¿½Ì•\ï¿½ï¿½
 fprintf('== lambdaPlus == ');
 fprintf('%.3f ', lambdaPlus);
 fprintf('\n');

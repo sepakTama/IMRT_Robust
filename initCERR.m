@@ -1,9 +1,9 @@
 % register functions that has different paths
 % we need to change paths depend on local machine
-addpath(genpath('/Applications/CERR-master'));
-addpath(genpath('/Applications/CPLEX_Studio128/cplex/matlab/x86-64_osx'));
-%addpath(genpath('../CERR-master'));
-%addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio1262/cplex/matlab/x86-64_linux'));
+% addpath(genpath('/Applications/CERR-master'));
+% addpath(genpath('/Applications/CPLEX_Studio128/cplex/matlab/x86-64_osx'));
+addpath(genpath('../CERR-master'));
+addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio1262/cplex/matlab/x86-64_linux'));
 
 % /setFunction has the informations of PTVs and OARs, and these functions are used after caluculating IMRTP
 addpath('./setFunction')

@@ -26,7 +26,7 @@ for i=1:strNum
     numOfNoise = floor(num * rate);
     
     % select the index of matrix which is added noises
-    % ind = randi(num, numOfNoise, 1); % num‚¾‚Æ‚¤‚Ü‚­d•¡‚·‚é‰Â”\«‚ª‚ ‚é
+    % ind = randi(num, numOfNoise, 1); % numï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Ü‚ï¿½ï¿½dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     ind = transpose(randperm(num, numOfNoise));
     ind = sort(ind);
     
@@ -46,16 +46,16 @@ for i=1:strNum
     sp(ind) = vecNoise;
     
     % calculate D0 = D + zeta * D'
-    Input{i}.mat0(ind) = mat(ind) + zeta .* sp;
+    Input{i}.mat0 = mat + zeta .* sp;
     Input{i}.mat0(ind(find(Input{i}.mat0(ind)<0))) = 0;
     
     vecNoise = abs(vecNoise);
     % calculate D+ = D + uncertainBound * |D'|
     % no need to consicder non-negative constraints
-    Input{i}.matPlus(ind) = mat(ind) + uncertainBound .* abs(sp);
+    Input{i}.matPlus = mat + uncertainBound .* abs(sp);
     
     % calculate D+ = D - uncertainBound * |D'|
-    Input{i}.matMinus(ind) = mat(ind) - uncertainBound .* abs(sp);
+    Input{i}.matMinus = mat - uncertainBound .* abs(sp);
     Input{i}.matMinus(ind(find(Input{i}.matMinus(ind)<0))) = 0;
 end
 
