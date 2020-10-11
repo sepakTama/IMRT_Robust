@@ -355,7 +355,7 @@ for z=1:iterationNum
                    uborigin(fixIndex+strVoxelNum+voxel) = min(uborigin(fixIndex+strVoxelNum+voxel), ud);
                    
                    spi(curPos:curPos+1) = [curConst curConst];
-                   spj(curPos:curPos+1) = [fixIndex+strvoxelNum+voxel paramIndex];
+                   spj(curPos:curPos+1) = [fixIndex+strVoxelNum+voxel paramIndex];
                    sps(curPos:curPos+1) = [1 -1];
                    bcon(curConst) = ud;
                    % upload index

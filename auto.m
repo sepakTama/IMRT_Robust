@@ -56,7 +56,7 @@ for ratio=0:0.01:0.4
             [Input, x, opt,  t_history, time_history, total_time] = UncertainIterate( ...
                             Input, alpha, iterationNum, option, lambdaMinus, lambdaPlus, ratio, UncertainBound);
 
-            data_csv = [data_csv; [alpha iterationNum ratio t_history.' time_histry.' total_time]];
+            data_csv = [data_csv; [alpha iterationNum ratio UncertainBound t_history.' time_history.' total_time]];
         end
     end
 end
