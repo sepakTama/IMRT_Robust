@@ -11,7 +11,7 @@ rate = ratio;
 % calculate the bound of zeta
 %uncertainBound = 0.1;
 
-% single uniformly distributed randmo number in interval (0, uncertainBound)
+% single uniformly distributed random number in interval (0, uncertainBound)
 zeta = uncertainBound * rand(1);
 
 [~, strNum] = size(Input);
@@ -26,7 +26,7 @@ for i=1:strNum
     numOfNoise = floor(num * rate);
     
     % select the index of matrix which is added noises
-    % ind = randi(num, numOfNoise, 1); % numï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Ü‚ï¿½ï¿½dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    % ind = randi(num, numOfNoise, 1); % num?½?½?½Æ‚ï¿½?½Ü‚ï¿½?½d?½?½?½?½?½?½Â”\?½?½?½?½?½?½?½?½
     ind = transpose(randperm(num, numOfNoise));
     ind = sort(ind);
     

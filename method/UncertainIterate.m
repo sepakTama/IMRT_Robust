@@ -24,7 +24,7 @@ time_history = [];
 EPS = 1e-2;
 INF = 120;
 
-% ï¿½pï¿½ï¿½ï¿½Ä‚ï¿½ï¿½È‚ï¿½
+% ?½p?½?½?½Ä‚ï¿½?½È‚ï¿½
 boundAdjust = 0;
 
 % beamletNum: number of beamlets, strNum: number of PTV and OAR
@@ -35,7 +35,7 @@ global init;
 
 % decide how many we use depende on alpha
 % set Influence Matrix with chooseMatrix
-% Input{*}.val ï¿½Í—pï¿½ï¿½ï¿½Ä‚ï¿½ï¿½È‚ï¿½ï¿½B
+% Input{*}.val ?½Í—p?½?½?½Ä‚ï¿½?½È‚ï¿½?½B
 if alpha<1
     for i=1:strNum
      [Input{i}.mat, Input{i}.val] = chooseMatrix(Input{i}.mat, Input{i}.val, alpha);
@@ -79,14 +79,14 @@ for str = 1:strNum
     % (\theta - z)^+...voxelNum
     % \zeta...1
     % there are upper and lower constraints
-    % ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Ä‚İ‚ï¿½
+    % ?½C?½?½?½?½?½Ä‚İ‚ï¿½
     exvariable = exvariable + (2*Input{str}.size + 1) * (max(size(Input{str}.lp))+max(size(Input{str}.up))); 
 end
 
-% this is minimize variable. -> ï¿½ï¿½ï¿½ï¿½ï¿½ç‚­ï¿½ï¿½ï¿½ï¿½È‚ï¿½
+% this is minimize variable. -> ?½?½?½?½?½ç‚­?½?½?½?½È‚ï¿½
 % exvariable = exvariable + 1;
 
-% ï¿½ï¿½ï¿½ï¿½
+% ?½?½?½?½
 % [D+;D-]x = z <=> [D+;D-, -I][x , z]^T = 0 <=> Aeq * (variable) = beq
 Aeq = [Aeq -speye(voxelNum)]; 
 beq = zeros(voxelNum, 1);
@@ -116,7 +116,7 @@ for str = 1:strNum
     cntSetVariable = cntSetVariable + 2 * strVoxelNum * DVCNum;
     
     % \zeta, ()^+, t -> use in C-VaR constraint
-    % ï¿½ï¿½ï¿½ï¿½ï¿½ç‚­strVoxelNumï¿½Í‚ï¿½ï¿½ï¿½È‚ï¿½
+    % ?½?½?½?½?½ç‚­strVoxelNum?½Í‚ï¿½?½?½È‚ï¿½
     cntSetVariable = cntSetVariable + (1 + 1 + strVoxelNum) * DVCNum ;
 end
 
@@ -133,10 +133,10 @@ for str = 1:strNum
 end
 
 % set the number of unusing voxel
-% ï¿½Wï¿½ï¿½Rï¿½ÉŠÜ‚Ü‚ï¿½ï¿½voxelï¿½ÌŒÂï¿½
+% ?½W?½?½R?½ÉŠÜ‚Ü‚ï¿½?½voxel?½ÌŒÂï¿½
 CVaRIndex = [];
 
-% ï¿½oï¿½Í‚ï¿½optï¿½ÌŒï¿½ï¿½^
+% ?½o?½Í‚ï¿½opt?½ÌŒï¿½?½^
 finalx = [zeros(beamletNum + voxelNum, 1) ; 1000];
 
 % main routine
@@ -150,7 +150,7 @@ for z=1:iterationNum
     lambdaMinusIndex = 1;
     lambdaPlusIndex = 1;
     
-    % z ï¿½Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Kï¿½v? -> ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    % z ?½Ì•ï¿½?½?½?½?½?½C?½?½?½K?½v? -> ?½C?½?½?½?½?½È‚ï¿½?½Ä‚ï¿½?½?½?½?½?½?½?½?½?½?½
     % original ub and lb value.
     uborigin = [ones(beamletNum, 1)*INF; ones(voxelNum, 1) * 100];  
     lborigin = zeros(beamletNum + voxelNum, 1);  
@@ -172,11 +172,11 @@ for z=1:iterationNum
     
     coefValues = []; % set the value of coefficient in DVC with CVaR
     
-    % x0 is starting point (->ï¿½ï¿½ï¿½ï¿½_ï¿½Å‚ï¿½ï¿½ï¿½È‚Éï¿½ï¿½Ô‚ï¿½ï¿½Ï‚ï¿½ï¿½È‚ï¿½)
+    % x0 is starting point (->?½?½?½?½_?½Å‚ï¿½?½?½È‚Éï¿½?½Ô‚ï¿½?½Ï‚ï¿½?½È‚ï¿½)
     x0 = [finalx(1:(beamletNum + voxelNum+1)) ;zeros(exvariable, 1)  ];
     prevZetaIndex = 1;
     
-    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    % ?½?½?½?½?½?½?½?½
     for str=1:strNum
         Input{str}.prevDoseMinus = Input{str}.matMinus * finalx(1:beamletNum);
         Input{str}.prevDosePlus = Input{str}.matPlus * finalx(1:beamletNum);
@@ -188,13 +188,13 @@ for z=1:iterationNum
                for voxel=1:Input{str}.size
                    % lower bound on variable
                    % each bound is for z- z+, respectively
-                   lborigin(fixIndex+voxel) = max(lborigin(fixIndex+voxel), ld); % ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½ï¿½Â‚ï¿½ï¿½ï¿½maxï¿½Æ‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½B
+                   lborigin(fixIndex+voxel) = max(lborigin(fixIndex+voxel), ld); % ?½?½?½?½?½C?½?½?½?½?½?½B?½?½Â‚ï¿½?½?½max?½Æ‚ï¿½?½Ä‚ï¿½?½?½B
                    lborigin(fixIndex+Input{str}.size+voxel) = max(lborigin(fixIndex+Input{str}.size+voxel), ld);
                    
                    % -(z-) - Pt <= -L
                    spi(curPos:curPos+1) = [curConst curConst]; 
                    spj(curPos:curPos+1) = [fixIndex+voxel paramIndex];
-                   sps(curPos:curPos+1) = [-1 -1]; % Pï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½Î‚ï¿½ï¿½ï¿½ï¿½ï¿½ÏX
+                   sps(curPos:curPos+1) = [-1 -1]; % P?½?½?½l?½?½?½?½?½?½È‚ï¿½Î‚ï¿½?½?½?½?½ÏX
                    bcon(curConst) = -ld;
                    
                    % upload the index of sparse matrix
@@ -202,7 +202,7 @@ for z=1:iterationNum
                    curPos = curPos + 2;
                end
                
-               % ï¿½ï¿½ï¿½ï¿½ï¿½ÉVï¿½ï¿½ï¿½ï¿½penaltyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -> wIndexï¿½Ìï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Kï¿½vï¿½ï¿½ï¿½ï¿½H
+               % ?½?½?½?½?½ÉV?½?½?½?½penalty?½?½?½?½?½?½?½ -> wIndex?½Ìï¿½?½?½?½l?½?½?½?½?½?½K?½v?½?½?½?½H
                % penalty terms ("nu" is the artificial variable)
                strsize = Input{str}.size;
                for voxel = 1:Input{str}.size
@@ -231,9 +231,9 @@ for z=1:iterationNum
             unuseIndex = zeros(Input{str}.size, 1);
             for voxel = 1:Input{str}.size
                 checker = Input{str}.lt(ind) - EPS;
-                % if z- < L - Pt, then this coresponding index turns from 0 to 1
-                % z- ï¿½Åï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½Hï¿½vï¿½`ï¿½Fï¿½bï¿½N
-                if Input{str}.prevDoseMinus(voxel) < checker
+                % if z+ < L - Pt, then this coresponding index turns from 0 to 1
+                % z- ?½Åï¿½?½?½?½?½?½Ì‚ï¿½?½H?½v?½`?½F?½b?½N
+                if Input{str}.prevDosePlus(voxel) < checker
                     unuseIndex(voxel) = 1;
                 else
                     useCnt = useCnt+1;
@@ -241,7 +241,7 @@ for z=1:iterationNum
             end
             
             % eta is used when zeta is needed in inequarity
-            % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½etaï¿½Í˜_ï¿½ï¿½ï¿½ï¿½zeta
+            % ?½?½?½?½?½?½eta?½Í˜_?½?½?½?½zeta
             etaIndex = wIndex + useCnt ;
             etaIndexes = [etaIndexes; etaIndex];
             initIndex = wIndex-1;
@@ -312,7 +312,7 @@ for z=1:iterationNum
             curConst = curConst + 1;
             % until here, about DVC with ratio alpha
             
-            % coefï¿½Ìï¿½ï¿½Í‚ï¿½ï¿½Ü‚ï¿½Kï¿½vï¿½È‚ï¿½ï¿½H|R|ï¿½ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½Ì‚Å‚ÍH
+            % coef?½Ìï¿½?½Í‚ï¿½?½Ü‚ï¿½K?½v?½È‚ï¿½?½H|R|?½?½?½?½?½Å‚ï¿½?½?½?½Ì‚Å‚ÍH
             coefValues = [coefValues; coef];
             
             % penalty term (theta - z)^+ /// - z - w <= - theta(ld)
@@ -326,7 +326,7 @@ for z=1:iterationNum
                 sps(curPos:curPos+1) = [-1, -1];
                 bcon(curConst) = -ld;
                 
-                x0(wIndex) = 0; % ï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½ï¿½é‚©ï¿½Ílï¿½ï¿½ï¿½ï¿½
+                x0(wIndex) = 0; % ?½?½?½?½_?½?½?½?½é‚©?½Íl?½?½?½?½
                 % set penalty to objective function c(wIndex)
                 c(wIndex) = lambdaMinus(lambdaMinusIndex) / strsize;
                 % upload index
@@ -362,7 +362,7 @@ for z=1:iterationNum
                    curConst = curConst + 1;
                    curPos = curPos + 2; 
                 end
-                % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½penaltyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                % ?½?½?½?½?½?½penalty?½?½?½?½?½?½?½?½?½
                 % penalty terms ("nu" is the artificial variable)
                 % z+ - nu <= U
                 strsize = Input{str}.size;
@@ -393,7 +393,7 @@ for z=1:iterationNum
             % check the voxel is included in the set R
             for voxel = 1:Input{str}.size
                checker = Input{str}.ut(ind) + EPS;
-               if Input{str}.prevDosePlus(voxel) > checker
+               if Input{str}.prevDoseMinus(voxel) > checker
                   unuseIndex(voxel) = 1;
                else
                    useCnt = useCnt + 1;
@@ -471,7 +471,7 @@ for z=1:iterationNum
             curPos = curPos + 1;
             curConst = curConst + 1;
             
-            % coefï¿½Ìï¿½ï¿½Í‚ï¿½ï¿½ï¿½È‚ï¿½ï¿½H
+            % coef?½Ìï¿½?½Í‚ï¿½?½?½È‚ï¿½?½H
             coefValues = [coefValues; coef];
             
             % from here, penalty term
@@ -487,7 +487,7 @@ for z=1:iterationNum
                 bcon(curConst) = ud;
                 
                 % initial point
-                x0(wIndex) = 0; % ï¿½ÏXï¿½ï¿½ï¿½ï¿½Æ‘ï¿½ï¿½ï¿½ï¿½È‚ï¿½H
+                x0(wIndex) = 0; % ?½ÏX?½?½?½?½Æ‘ï¿½?½?½?½È‚ï¿½H
                 
                 % coefficient of the objective function
                 c(wIndex) = lambdaPlus(lambdaPlusIndex) / strsize;
@@ -628,12 +628,12 @@ for str = 1:strNum
     end
 end
 
-%CVaRï¿½Ì•\ï¿½ï¿½
+%CVaR?½Ì•\?½?½
 fprintf('== CVaRIndex == ');
 fprintf('%.2f ', CVaRIndex);
 fprintf('\n');
 
-% ï¿½ÏXï¿½_ lambdaï¿½Ì•\ï¿½ï¿½
+% ?½ÏX?½_ lambda?½Ì•\?½?½
 fprintf('== lambdaPlus == ');
 fprintf('%.3f ', lambdaPlus);
 fprintf('\n');

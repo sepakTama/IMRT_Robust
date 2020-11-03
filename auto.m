@@ -62,6 +62,3 @@ for ratio=0.01:0.01:0.2
     end
 end
 csvwrite(data_path, data_csv);
-
-
-
