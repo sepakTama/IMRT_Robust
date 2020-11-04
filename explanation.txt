@@ -1,0 +1,5 @@
+data.csvに関して
+alpha iterationNum ratio t_history time_history total_time
+の順番で計測しているが、UncertainBoundを入力するのを忘れた。
+
+ratio=0.05:0.05:0.4に対して、UncertainBound=0.02:0.02:0.2で変化させている。
